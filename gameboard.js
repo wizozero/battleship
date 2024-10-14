@@ -2,10 +2,10 @@ import Ship from './ship'
 
 function GameBoard() {
 	const boardSize = 10
-	let board = Array(boardSize)
+	const board = Array(boardSize)
 		.fill()
 		.map(() => Array(boardSize).fill(null))
-	let missedShots = []
+	const missedShots = []
 
 	const isValidCoordinate = (row, col) =>
 		row >= 0 && row < boardSize && col >= 0 && col < boardSize
