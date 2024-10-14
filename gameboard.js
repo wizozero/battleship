@@ -47,21 +47,26 @@ function GameBoard() {
 
 		receiveAttack(row, col) {
 			if (!isValidCoordinate(row, col)) return false
+
+			if (
+				missedShots.some((shot) => shot.row === row && shot.col === col) ||
+				(board[row][col] !== null && board[row][col].isHit)
+			) {
+				return false
+			}
+
 			if (board[row][col] !== null) {
 				board[row][col].hit()
+				board[row][col].isHit = true
 				return true
+			} else {
+				missedShots.push({ row, col })
+				return false
 			}
-			const isNewMiss = !missedShots.some(
-				(shot) => shot.row === row && shot.col === col
-			)
-			if (isNewMiss) missedShots.push({ row, col })
-			return false
 		},
-
 		get missedShots() {
 			return [...missedShots]
 		},
-
 		isAllShipsSunk() {
 			return board.flat().every((cell) => cell === null || cell.isSunk())
 		},
