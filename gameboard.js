@@ -1,104 +1,82 @@
+// gameboard.js
 import Ship from './ship.js'
 
 function GameBoard() {
 	const boardSize = 10
-	const board = Array(boardSize)
+	let board = Array(boardSize)
 		.fill()
 		.map(() => Array(boardSize).fill(null))
-	const missedShots = []
 	const ships = []
+	const missedShots = []
 
-	const isValidCoordinate = (row, col) =>
-		row >= 0 && row < boardSize && col >= 0 && col < boardSize
-
-	const isValidPlacement = (row, col, direction, length) => {
-		if (!isValidCoordinate(row, col)) return false
-		const endPosition = direction === 'horizontal' ? col + length : row + length
-		return endPosition <= boardSize
+	function placeShip(row, col, direction, length) {
+		const newShip = Ship(length)
+		if (canPlaceShip(row, col, direction, length)) {
+			for (let i = 0; i < length; i++) {
+				if (direction === 'horizontal') {
+					board[row][col + i] = { ship: newShip, index: i }
+				} else {
+					board[row + i][col] = { ship: newShip, index: i }
+				}
+			}
+			ships.push(newShip)
+			return true
+		}
+		return false
 	}
 
-	const isClearPath = (row, col, direction, length) => {
-		for (let i = 0; i < length; i++) {
-			const currentRow = direction === 'horizontal' ? row : row + i
-			const currentCol = direction === 'horizontal' ? col + i : col
-			if (board[currentRow][currentCol] !== null) return false
+	function canPlaceShip(row, col, direction, length) {
+		if (direction === 'horizontal') {
+			if (col + length > boardSize) return false
+			for (let i = 0; i < length; i++) {
+				if (board[row][col + i] !== null) return false
+			}
+		} else {
+			if (row + length > boardSize) return false
+			for (let i = 0; i < length; i++) {
+				if (board[row + i][col] !== null) return false
+			}
 		}
 		return true
 	}
 
-	const placeShipOnBoard = (row, col, direction, ship) => {
-		for (let i = 0; i < ship.length; i++) {
-			const currentRow = direction === 'horizontal' ? row : row + i
-			const currentCol = direction === 'horizontal' ? col + i : col
-			board[currentRow][currentCol] = { ship, position: i }
+	function receiveAttack(row, col) {
+		if (board[row][col] === null) {
+			missedShots.push({ row, col })
+			return false
+		} else {
+			board[row][col].ship.hit(board[row][col].index)
+			return true
 		}
 	}
 
+	function allShipsSunk() {
+		return ships.every((ship) => ship.isSunk())
+	}
+
+	function clear() {
+		board = Array(boardSize)
+			.fill()
+			.map(() => Array(boardSize).fill(null))
+		ships.length = 0
+		missedShots.length = 0
+	}
+
 	return {
-		board,
-		ships, // Expose the ships array
-		placeShip(row, col, direction, length) {
-			if (
-				!isValidPlacement(row, col, direction, length) ||
-				!isClearPath(row, col, direction, length)
-			)
-				return false
-			const ship = Ship(length)
-			placeShipOnBoard(row, col, direction, ship)
-			ships.push(ship) // Add the ship to the ships array
-			return true
+		placeShip,
+		canPlaceShip,
+		receiveAttack,
+		allShipsSunk,
+		get board() {
+			return board
 		},
-		receiveAttack(row, col) {
-			if (!isValidCoordinate(row, col)) return false
-
-			if (this.board[row][col] === null) {
-				if (!missedShots.some((shot) => shot.row === row && shot.col === col)) {
-					missedShots.push({ row, col })
-				}
-				return false // Miss
-			} else {
-				const { ship, position } = this.board[row][col]
-				if (ship.isHit(position)) {
-					return false // Ya ha sido atacado
-				} else {
-					ship.hit(position)
-					return true // Hit
-				}
-			}
+		get ships() {
+			return ships
 		},
-
-		getShipPosition(row, col) {
-			const ship = this.board[row][col]
-			if (!ship) return -1
-
-			// Buscar horizontalmente
-			for (let i = 0; i < ship.length; i++) {
-				if (col - i >= 0 && this.board[row][col - i] === ship) return i
-			}
-
-			// Buscar verticalmente
-			for (let i = 0; i < ship.length; i++) {
-				if (row - i >= 0 && this.board[row - i][col] === ship) return i
-			}
-
-			return 0
-		},
-
 		get missedShots() {
-			return [...missedShots]
+			return missedShots
 		},
-		isAllShipsSunk() {
-			const ships = new Set()
-			for (let row = 0; row < boardSize; row++) {
-				for (let col = 0; col < boardSize; col++) {
-					const cell = this.board[row][col]
-					if (cell && cell.ship) {
-						ships.add(cell.ship)
-					}
-				}
-			}
-			return Array.from(ships).every((ship) => ship.isSunk())
-		},
+		clear,
 	}
 }
 

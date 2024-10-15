@@ -1,3 +1,5 @@
+// boardRenderer.js
+
 export function renderBoard(playerType) {
 	const board = document.createElement('div')
 	board.classList.add('board')
@@ -25,19 +27,9 @@ export function updateBoardDisplay(gameboard, boardElement, hideShips = false) {
 		const row = parseInt(cell.dataset.row)
 		const col = parseInt(cell.dataset.col)
 
-		if (isNaN(row) || isNaN(col) || !gameboard.board || !gameboard.board[row]) {
-			console.error(
-				'Invalid row or column, or gameboard structure is incorrect',
-				{ row, col, gameboard }
-			)
-			return
-		}
+		cell.className = 'cell'
 
-		const cellContent = gameboard.board[row][col]
-
-		cell.classList.remove('ship', 'hit', 'miss', 'sunk')
-
-		if (cellContent === null) {
+		if (gameboard.board[row][col] === null) {
 			if (
 				gameboard.missedShots.some(
 					(shot) => shot.row === row && shot.col === col
@@ -45,27 +37,15 @@ export function updateBoardDisplay(gameboard, boardElement, hideShips = false) {
 			) {
 				cell.classList.add('miss')
 			}
-		} else if (typeof cellContent === 'object') {
-			const { ship, position } = cellContent
-			if (!hideShips && !ship.isHit(position)) {
+		} else {
+			const shipCell = gameboard.board[row][col]
+			if (!hideShips) {
 				cell.classList.add('ship')
 			}
-			if (ship.isHit(position)) {
+			if (shipCell.ship.isHit(shipCell.index)) {
 				cell.classList.add('hit')
-				if (ship.isSunk()) {
-					// Marcar todas las celdas del barco como hundidas
-					gameboard.board.forEach((row, rowIndex) => {
-						row.forEach((col, colIndex) => {
-							if (col && col.ship === ship) {
-								const shipCell = boardElement.querySelector(
-									`[data-row="${rowIndex}"][data-col="${colIndex}"]`
-								)
-								if (shipCell) {
-									shipCell.classList.add('sunk')
-								}
-							}
-						})
-					})
+				if (shipCell.ship.isSunk()) {
+					cell.classList.add('sunk')
 				}
 			}
 		}
