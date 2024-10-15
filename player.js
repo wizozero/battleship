@@ -1,4 +1,4 @@
-import GameBoard from './gameboard'
+import GameBoard from './gameboard.js'
 
 function Player(isComputer = false) {
 	const gameboard = GameBoard()
@@ -9,11 +9,10 @@ function Player(isComputer = false) {
 
 	const randomAttack = (enemyGameBoard) => {
 		let row, col
-
 		do {
 			row = Math.floor(Math.random() * 10)
 			col = Math.floor(Math.random() * 10)
-		} while (enemyGameBoard.receiveAttack(row, col))
+		} while (!enemyGameBoard.receiveAttack(row, col))
 
 		return { row, col }
 	}

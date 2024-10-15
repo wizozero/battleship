@@ -1,4 +1,4 @@
-import Ship from './ship'
+import Ship from './ship.js'
 
 function GameBoard() {
 	const boardSize = 10
@@ -34,6 +34,7 @@ function GameBoard() {
 	}
 
 	return {
+		board,
 		placeShip(row, col, direction, length) {
 			if (
 				!isValidPlacement(row, col, direction, length) ||

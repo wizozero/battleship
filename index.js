@@ -1,4 +1,6 @@
-import Player from './player'
+import Player from './player.js'
+
+const startBtn = document.querySelector('#start-btn')
 
 let player
 let computer
@@ -17,8 +19,10 @@ function newGame() {
 			[6, 6, 'vertical', 2],
 		],
 	]
+
 	player = Player(false)
 	computer = Player(true)
+
 	defaultCoords[0].forEach((coord) => player.gameboard.placeShip(...coord))
 	defaultCoords[1].forEach((coord) => computer.gameboard.placeShip(...coord))
 
@@ -33,8 +37,8 @@ function renderBoards() {
 	playerBoard.innerHTML = ''
 	computerBoard.innerHTML = ''
 
-	for (let i = 0; i < array.length; i++) {
-		for (let j = 0; j < array.length; j++) {
+	for (let i = 0; i < 10; i++) {
+		for (let j = 0; j < 10; j++) {
 			const playerCell = document.createElement('div')
 			playerCell.classList.add('cell')
 			playerCell.dataset.row = i
@@ -43,9 +47,10 @@ function renderBoards() {
 
 			const computerCell = document.createElement('div')
 			computerCell.classList.add('cell')
-			playerCell.dataset.row = i
-			playerCell.dataset.col = j
+			computerCell.dataset.row = i
+			computerCell.dataset.col = j
 			computerCell.addEventListener('click', () => playerAttack(i, j))
+			computerCell.style.cursor = 'pointer'
 			computerBoard.appendChild(computerCell)
 		}
 	}
@@ -58,6 +63,16 @@ function updateBoardDisplay(gameboard, boardElement, hideShips = false) {
 	cells.forEach((cell) => {
 		const row = parseInt(cell.dataset.row)
 		const col = parseInt(cell.dataset.col)
+
+		// Comprobación de seguridad
+		if (isNaN(row) || isNaN(col) || !gameboard.board || !gameboard.board[row]) {
+			console.error(
+				'Invalid row or column, or gameboard structure is incorrect',
+				{ row, col, gameboard }
+			)
+			return // Skip this iteration
+		}
+
 		const cellContent = gameboard.board[row][col]
 
 		if (cellContent === null) {
@@ -68,6 +83,7 @@ function updateBoardDisplay(gameboard, boardElement, hideShips = false) {
 		}
 
 		if (
+			gameboard.missedShots &&
 			gameboard.missedShots.some((shot) => shot.row === row && shot.col === col)
 		) {
 			cell.classList.add('miss')
@@ -78,12 +94,15 @@ function updateBoardDisplay(gameboard, boardElement, hideShips = false) {
 function playerAttack(row, col) {
 	if (currentPlayer !== player) return
 
-	if (computer.gameboard.receiveAttack(row, col)) {
-		updateBoardDisplay(
-			computer.gameboard,
-			document.querySelector('#boardLeft'),
-			true
-		)
+	const attackResult = computer.gameboard.receiveAttack(row, col)
+	updateBoardDisplay(
+		computer.gameboard,
+		document.querySelector('#boardLeft'),
+		true
+	)
+
+	if (attackResult) {
+		if (checkGameOver()) return
 		computerTurn()
 	}
 }
@@ -93,19 +112,38 @@ function computerTurn() {
 	setTimeout(() => {
 		const { row, col } = computer.randomAttack(player.gameboard)
 		updateBoardDisplay(player.gameboard, document.querySelector('#boardRight'))
-		if (!checkGameOver()) {
-			currentPlayer = player
-		}
+		if (checkGameOver()) return
+		currentPlayer = player
 	}, 1000)
 }
 
 function checkGameOver() {
-	if (player.gameboard.isAllShipsSunk()) {
-		alert('Computer wins')
-		return true
-	} else if (computer.gameboard.isAllShipsSunk()) {
-		alert('Player wins!')
+	let gameOver = false
+	let message = ''
+
+	if (computer.gameboard.isAllShipsSunk()) {
+		gameOver = true
+		message = 'Player wins!'
+	} else if (player.gameboard.isAllShipsSunk()) {
+		gameOver = true
+		message = 'Computer wins!'
+	}
+
+	if (gameOver) {
+		alert(message)
+		disableBoard()
 		return true
 	}
 	return false
 }
+
+function disableBoard() {
+	const computerBoard = document.querySelector('#boardLeft')
+	const cells = computerBoard.querySelectorAll('.cell')
+	cells.forEach((cell) => {
+		cell.removeEventListener('click', playerAttack)
+		cell.style.cursor = 'not-allowed'
+	})
+}
+
+startBtn.addEventListener('click', newGame)

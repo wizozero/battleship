@@ -3,20 +3,38 @@
 	grid-template-columns: repeat(10, 30px);
 	grid-template-rows: repeat(10, 30px);
 	gap: 1px;
+	margin: 20px;
 }
 
 .cell {
 	width: 30px;
 	height: 30px;
-	border: 1px solid black;
+	border: 1px solid #ccc;
+	background-color: #f0f0f0;
 }
 
 .ship {
-	background-color: gray;
+	background-color: #999;
 }
+
 .hit {
-	background-color: red;
+	background-color: #ff6b6b;
 }
+
 .miss {
-	background-color: blue;
+	background-color: #4ecdc4;
+}
+
+#gameContainer {
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+}
+
+#start-btn {
+	display: block;
+	margin: 20px auto;
+	padding: 10px 20px;
+	font-size: 16px;
+	cursor: pointer;
 }
