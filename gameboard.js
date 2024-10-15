@@ -40,6 +40,41 @@ function GameBoard() {
 		return true
 	}
 
+	function removeShip(row, col) {
+		if (board[row][col] !== null) {
+			const ship = board[row][col].ship
+			for (let i = 0; i < boardSize; i++) {
+				for (let j = 0; j < boardSize; j++) {
+					if (board[i][j] && board[i][j].ship === ship) {
+						board[i][j] = null
+					}
+				}
+			}
+			const index = ships.indexOf(ship)
+			if (index > -1) {
+				ships.splice(index, 1)
+			}
+			return true
+		}
+		return false
+	}
+
+	function getShipAt(row, col) {
+		return board[row][col] ? board[row][col].ship : null
+	}
+
+	function getShipOrientation(row, col) {
+		if (!board[row][col]) return null
+		if (
+			col < boardSize - 1 &&
+			board[row][col + 1] &&
+			board[row][col].ship === board[row][col + 1].ship
+		) {
+			return 'horizontal'
+		}
+		return 'vertical'
+	}
+
 	function receiveAttack(row, col) {
 		if (board[row][col] === null) {
 			missedShots.push({ row, col })
@@ -64,7 +99,6 @@ function GameBoard() {
 
 	return {
 		placeShip,
-		canPlaceShip,
 		receiveAttack,
 		allShipsSunk,
 		get board() {
@@ -77,6 +111,10 @@ function GameBoard() {
 			return missedShots
 		},
 		clear,
+		removeShip,
+		getShipAt,
+		getShipOrientation,
+		canPlaceShip,
 	}
 }
 

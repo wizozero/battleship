@@ -120,3 +120,37 @@ button:hover {
 .ship-item.sunk .ship-cell {
 	background-color: var(--sunk-color);
 }
+
+.dragged-ship {
+	position: absolute;
+	display: flex;
+	z-index: 1000;
+	cursor: move;
+}
+
+.dragged-ship .ship-cell {
+	width: 30px;
+	height: 30px;
+	background-color: var(--ship-color);
+	border: 1px solid var(--board-color);
+}
+
+.cell.ship {
+	cursor: move;
+}
+
+.cell.ship:hover {
+	opacity: 0.8;
+}
+
+.highlight-valid {
+	background-color: rgba(46, 204, 113, 0.5); /* Green with opacity */
+}
+
+.highlight-invalid {
+	background-color: rgba(231, 76, 60, 0.5); /* Red with opacity */
+}
+
+.ship-item {
+	cursor: move;
+}
