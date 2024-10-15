@@ -13,7 +13,7 @@ function Player(isComputer = false) {
 			row = Math.floor(Math.random() * 10)
 			col = Math.floor(Math.random() * 10)
 		} while (
-			enemyGameboard.board[row][col] === null &&
+			enemyGameboard.board[row][col] !== null ||
 			enemyGameboard.missedShots.some(
 				(shot) => shot.row === row && shot.col === col
 			)

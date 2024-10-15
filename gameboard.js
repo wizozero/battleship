@@ -6,6 +6,7 @@ function GameBoard() {
 		.fill()
 		.map(() => Array(boardSize).fill(null))
 	const missedShots = []
+	const ships = []
 
 	const isValidCoordinate = (row, col) =>
 		row >= 0 && row < boardSize && col >= 0 && col < boardSize
@@ -35,6 +36,7 @@ function GameBoard() {
 
 	return {
 		board,
+		ships, // Expose the ships array
 		placeShip(row, col, direction, length) {
 			if (
 				!isValidPlacement(row, col, direction, length) ||
@@ -43,6 +45,7 @@ function GameBoard() {
 				return false
 			const ship = Ship(length)
 			placeShipOnBoard(row, col, direction, ship)
+			ships.push(ship) // Add the ship to the ships array
 			return true
 		},
 		receiveAttack(row, col) {

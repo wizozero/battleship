@@ -8,12 +8,23 @@
 	</head>
 	<body>
 		<div id="turn-indicator"></div>
-		<div id="gameContainer">
-			<div id="boardLeft" class="board"></div>
-			<div id="boardRight" class="board"></div>
+		<div id="game-container">
+			<div id="boards-container">
+				<div id="computer-container">
+					<h2>Computer's Board</h2>
+					<div id="computer-board" class="board"></div>
+				</div>
+				<div id="player-container">
+					<h2>Your Board</h2>
+					<div id="player-board" class="board"></div>
+				</div>
+			</div>
+			<div id="player-ships-container">
+				<h3>Your Ships</h3>
+				<div id="player-ships"></div>
+			</div>
 		</div>
 		<button id="start-btn">New Game</button>
-
 		<script type="module" src="index.js"></script>
 	</body>
 </html>
