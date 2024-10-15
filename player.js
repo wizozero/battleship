@@ -7,13 +7,12 @@ function Player(isComputer = false) {
 		return enemyGameBoard.receiveAttack(row, col)
 	}
 
-	const randomAttack = (enemyGameBoard) => {
+	const randomAttack = (enemyGameboard) => {
 		let row, col
 		do {
 			row = Math.floor(Math.random() * 10)
 			col = Math.floor(Math.random() * 10)
-		} while (!enemyGameBoard.receiveAttack(row, col))
-
+		} while (!enemyGameboard.receiveAttack(row, col))
 		return { row, col }
 	}
 

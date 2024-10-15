@@ -45,26 +45,20 @@ function GameBoard() {
 			placeShipOnBoard(row, col, direction, ship)
 			return true
 		},
-
 		receiveAttack(row, col) {
 			if (!isValidCoordinate(row, col)) return false
 
-			if (
-				missedShots.some((shot) => shot.row === row && shot.col === col) ||
-				(board[row][col] !== null && board[row][col].isHit)
-			) {
-				return false
-			}
-
-			if (board[row][col] !== null) {
-				board[row][col].hit()
-				board[row][col].isHit = true
-				return true
-			} else {
+			if (this.board[row][col] === null) {
 				missedShots.push({ row, col })
-				return false
+				return true
+			} else if (this.board[row][col].isHit) {
+				return false // Ya ha sido atacado
+			} else {
+				this.board[row][col].hit()
+				return true
 			}
 		},
+
 		get missedShots() {
 			return [...missedShots]
 		},

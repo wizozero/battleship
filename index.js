@@ -64,29 +64,30 @@ function updateBoardDisplay(gameboard, boardElement, hideShips = false) {
 		const row = parseInt(cell.dataset.row)
 		const col = parseInt(cell.dataset.col)
 
-		// Comprobación de seguridad
 		if (isNaN(row) || isNaN(col) || !gameboard.board || !gameboard.board[row]) {
 			console.error(
 				'Invalid row or column, or gameboard structure is incorrect',
 				{ row, col, gameboard }
 			)
-			return // Skip this iteration
+			return
 		}
 
 		const cellContent = gameboard.board[row][col]
 
+		cell.classList.remove('ship', 'hit', 'miss')
+
 		if (cellContent === null) {
-			cell.classList.remove('ship', 'hit', 'miss')
+			// Empty cell
+			if (
+				gameboard.missedShots.some(
+					(shot) => shot.row === row && shot.col === col
+				)
+			) {
+				cell.classList.add('miss')
+			}
 		} else if (typeof cellContent === 'object') {
 			if (!hideShips) cell.classList.add('ship')
 			if (cellContent.isHit) cell.classList.add('hit')
-		}
-
-		if (
-			gameboard.missedShots &&
-			gameboard.missedShots.some((shot) => shot.row === row && shot.col === col)
-		) {
-			cell.classList.add('miss')
 		}
 	})
 }
@@ -101,20 +102,18 @@ function playerAttack(row, col) {
 		true
 	)
 
-	if (attackResult) {
-		if (checkGameOver()) return
-		computerTurn()
-	}
+	if (checkGameOver()) return
+	updateTurnIndicator()
+	computerTurn()
 }
 
 function computerTurn() {
 	currentPlayer = computer
-	setTimeout(() => {
-		const { row, col } = computer.randomAttack(player.gameboard)
-		updateBoardDisplay(player.gameboard, document.querySelector('#boardRight'))
-		if (checkGameOver()) return
-		currentPlayer = player
-	}, 1000)
+	const { row, col } = computer.randomAttack(player.gameboard)
+	updateBoardDisplay(player.gameboard, document.querySelector('#boardRight'))
+	if (checkGameOver()) return
+	currentPlayer = player
+	updateTurnIndicator()
 }
 
 function checkGameOver() {
@@ -146,4 +145,20 @@ function disableBoard() {
 	})
 }
 
-startBtn.addEventListener('click', newGame)
+function updateTurnIndicator() {
+	const indicator = document.getElementById('turn-indicator')
+	indicator.textContent =
+		currentPlayer === player ? 'Your turn' : "Computer's turn"
+}
+
+// Llama a esta función al inicio del juego y después de cada turno
+function startGame() {
+	newGame()
+	updateTurnIndicator()
+}
+
+// Modifica tus funciones playerAttack y computerTurn para incluir:
+updateTurnIndicator()
+
+// Y en el event listener del botón de inicio:
+startBtn.addEventListener('click', startGame)
