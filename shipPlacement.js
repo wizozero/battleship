@@ -5,6 +5,7 @@ let draggedShip = null
 let dragOffsetX = 0
 let dragOffsetY = 0
 let currentPlayer = null
+let isDragging = false
 
 export function initializeDragAndDrop(player) {
 	currentPlayer = player
@@ -12,10 +13,28 @@ export function initializeDragAndDrop(player) {
 	const shipList = document.getElementById('player-ships')
 
 	shipList.addEventListener('mousedown', startDragFromList)
-	playerBoard.addEventListener('mousedown', startDragFromBoard)
+	playerBoard.addEventListener('mousedown', handleBoardMouseDown)
 	document.addEventListener('mousemove', drag)
 	document.addEventListener('mouseup', endDrag)
-	playerBoard.addEventListener('dblclick', (e) => rotateShip(e, player))
+	document.addEventListener('keydown', handleKeyDown)
+}
+
+function handleBoardMouseDown(e) {
+	const cell = e.target.closest('.cell')
+	if (!cell || !cell.classList.contains('ship')) return
+
+	const row = parseInt(cell.dataset.row)
+	const col = parseInt(cell.dataset.col)
+
+	startDragFromBoard(e, row, col)
+}
+
+function handleKeyDown(e) {
+	if (e.key === 'r' || e.key === 'R') {
+		if (draggedShip) {
+			rotateShip()
+		}
+	}
 }
 
 function startDragFromList(e) {
@@ -28,6 +47,7 @@ function startDragFromList(e) {
 		length: length,
 		isNew: true,
 		originalElement: shipItem,
+		orientation: 'horizontal',
 	}
 
 	document.body.appendChild(draggedShip.element)
@@ -38,15 +58,11 @@ function startDragFromList(e) {
 
 	shipItem.style.opacity = '0.5' // Make the original ship semi-transparent
 
+	isDragging = true
 	drag(e)
 }
 
-function startDragFromBoard(e) {
-	const cell = e.target.closest('.cell')
-	if (!cell || !cell.classList.contains('ship')) return
-
-	const row = parseInt(cell.dataset.row)
-	const col = parseInt(cell.dataset.col)
+function startDragFromBoard(e, row, col) {
 	const ship = currentPlayer.gameboard.getShipAt(row, col)
 	if (!ship) return
 
@@ -64,7 +80,7 @@ function startDragFromBoard(e) {
 
 	document.body.appendChild(draggedShip.element)
 
-	const rect = cell.getBoundingClientRect()
+	const rect = e.target.getBoundingClientRect()
 	dragOffsetX = e.clientX - rect.left
 	dragOffsetY = e.clientY - rect.top
 
@@ -74,11 +90,12 @@ function startDragFromBoard(e) {
 		document.getElementById('player-board')
 	)
 
+	isDragging = true
 	drag(e)
 }
 
 function drag(e) {
-	if (!draggedShip) return
+	if (!draggedShip || !isDragging) return
 
 	draggedShip.element.style.left = `${e.clientX - dragOffsetX}px`
 	draggedShip.element.style.top = `${e.clientY - dragOffsetY}px`
@@ -96,13 +113,13 @@ function drag(e) {
 		const canPlace = currentPlayer.gameboard.canPlaceShip(
 			row,
 			col,
-			draggedShip.orientation || 'horizontal',
+			draggedShip.orientation,
 			draggedShip.length
 		)
 		highlightCells(
 			row,
 			col,
-			draggedShip.orientation || 'horizontal',
+			draggedShip.orientation,
 			draggedShip.length,
 			canPlace
 		)
@@ -128,20 +145,18 @@ function endDrag() {
 		currentPlayer.gameboard.canPlaceShip(
 			row,
 			col,
-			draggedShip.orientation || 'horizontal',
+			draggedShip.orientation,
 			draggedShip.length
 		)
 	) {
 		currentPlayer.gameboard.placeShip(
 			row,
 			col,
-			draggedShip.orientation || 'horizontal',
+			draggedShip.orientation,
 			draggedShip.length
 		)
 		placed = true
 	} else if (!draggedShip.isNew) {
-		// If the ship was already on the board and couldn't be placed in the new position,
-		// place it back in its original position
 		currentPlayer.gameboard.placeShip(
 			draggedShip.startRow,
 			draggedShip.startCol,
@@ -163,6 +178,7 @@ function endDrag() {
 	}
 
 	draggedShip = null
+	isDragging = false
 
 	if (currentPlayer.gameboard.ships.length === 10) {
 		document
@@ -218,6 +234,52 @@ function clearHighlight() {
 		})
 }
 
+function rotateShip() {
+	if (!draggedShip) return
+
+	draggedShip.orientation =
+		draggedShip.orientation === 'horizontal' ? 'vertical' : 'horizontal'
+	draggedShip.element.dataset.orientation = draggedShip.orientation
+	draggedShip.element.style.flexDirection =
+		draggedShip.orientation === 'horizontal' ? 'row' : 'column'
+
+	// Adjust position to keep the ship within the board
+	const playerBoard = document.getElementById('player-board')
+	const boardRect = playerBoard.getBoundingClientRect()
+	const shipRect = draggedShip.element.getBoundingClientRect()
+
+	let row = Math.floor((shipRect.top - boardRect.top) / 30)
+	let col = Math.floor((shipRect.left - boardRect.left) / 30)
+
+	if (draggedShip.orientation === 'vertical' && row + draggedShip.length > 10) {
+		row = 10 - draggedShip.length
+	} else if (
+		draggedShip.orientation === 'horizontal' &&
+		col + draggedShip.length > 10
+	) {
+		col = 10 - draggedShip.length
+	}
+
+	draggedShip.element.style.left = `${boardRect.left + col * 30}px`
+	draggedShip.element.style.top = `${boardRect.top + row * 30}px`
+
+	// Update highlight
+	clearHighlight()
+	const canPlace = currentPlayer.gameboard.canPlaceShip(
+		row,
+		col,
+		draggedShip.orientation,
+		draggedShip.length
+	)
+	highlightCells(
+		row,
+		col,
+		draggedShip.orientation,
+		draggedShip.length,
+		canPlace
+	)
+}
+
 export function randomizePlayerShips(player) {
 	const ships = [4, 3, 3, 2, 2, 2, 1, 1, 1, 1]
 	player.gameboard.clear()
@@ -237,49 +299,9 @@ export function randomizePlayerShips(player) {
 		}
 	})
 
+	console.log("Player's ships placed:", player.gameboard.ships)
 	updateBoardDisplay(player.gameboard, document.getElementById('player-board'))
 	document
 		.querySelectorAll('.ship-item')
 		.forEach((ship) => (ship.style.display = 'none'))
-}
-
-export function rotateShip(e, player) {
-	e.preventDefault() // Prevent default double-click behavior
-	const cell = e.target.closest('.cell')
-	if (!cell || !cell.classList.contains('ship')) return
-
-	const row = parseInt(cell.dataset.row)
-	const col = parseInt(cell.dataset.col)
-	const ship = player.gameboard.getShipAt(row, col)
-	if (!ship) return
-
-	const currentOrientation = player.gameboard.getShipOrientation(row, col)
-	const newOrientation =
-		currentOrientation === 'horizontal' ? 'vertical' : 'horizontal'
-
-	// Store the ship's length before removing it
-	const shipLength = ship.length
-
-	player.gameboard.removeShip(row, col)
-
-	let newRow = row
-	let newCol = col
-
-	// Adjust position if rotating would place the ship out of bounds
-	if (newOrientation === 'vertical' && row + shipLength > 10) {
-		newRow = 10 - shipLength
-	} else if (newOrientation === 'horizontal' && col + shipLength > 10) {
-		newCol = 10 - shipLength
-	}
-
-	if (
-		player.gameboard.canPlaceShip(newRow, newCol, newOrientation, shipLength)
-	) {
-		player.gameboard.placeShip(newRow, newCol, newOrientation, shipLength)
-	} else {
-		// If can't place in new orientation, revert to original position and orientation
-		player.gameboard.placeShip(row, col, currentOrientation, shipLength)
-	}
-
-	updateBoardDisplay(player.gameboard, document.getElementById('player-board'))
 }

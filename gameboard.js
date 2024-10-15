@@ -80,8 +80,8 @@ function GameBoard() {
 			missedShots.push({ row, col })
 			return false
 		} else {
-			board[row][col].ship.hit(board[row][col].index)
-			return true
+			const hit = board[row][col].ship.hit(board[row][col].index)
+			return hit
 		}
 	}
 

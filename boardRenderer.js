@@ -1,5 +1,3 @@
-// boardRenderer.js
-
 export function renderBoard(playerType) {
 	const board = document.createElement('div')
 	board.classList.add('board')

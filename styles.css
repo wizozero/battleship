@@ -154,3 +154,19 @@ button:hover {
 .ship-item {
 	cursor: move;
 }
+
+.cell.ship {
+	background-color: #999;
+}
+
+.cell.hit {
+	background-color: #ff6666;
+}
+
+.cell.miss {
+	background-color: #66ccff;
+}
+
+.cell.sunk {
+	background-color: #ff0000;
+}

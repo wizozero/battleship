@@ -1,9 +1,5 @@
 import Player from './player.js'
-import {
-	initializeDragAndDrop,
-	randomizePlayerShips,
-	rotateShip,
-} from './shipPlacement.js'
+import { initializeDragAndDrop, randomizePlayerShips } from './shipPlacement.js'
 import { renderBoard, updateBoardDisplay } from './boardRenderer.js'
 import { createShipList, updateShipList } from './shipListRenderer.js'
 
@@ -52,9 +48,6 @@ function initGame() {
 	updateTurnIndicator()
 
 	initializeDragAndDrop(player)
-	playerBoardContainer.addEventListener('dblclick', (e) =>
-		rotateShip(e, player)
-	)
 
 	gameControlButton.textContent = 'Start Game'
 	gameControlButton.onclick = startGame
@@ -63,16 +56,6 @@ function initGame() {
 	playerShipsContainer.style.display = 'block'
 
 	gameInProgress = false
-}
-
-function updateBoards() {
-	updateBoardDisplay(player.gameboard, document.getElementById('player-board'))
-	updateBoardDisplay(
-		computer.gameboard,
-		document.getElementById('computer-board'),
-		true
-	)
-	updateShipList(player.gameboard.ships, 'player-ships')
 }
 
 function updateTurnIndicator() {
@@ -102,7 +85,24 @@ function computerTurn() {
 	if (currentPlayer !== computer) return
 
 	const { row, col } = computer.randomAttack(player.gameboard)
+	console.log(`Computer attacking (${row}, ${col})`)
+	console.log(
+		'Player board before attack:',
+		JSON.parse(JSON.stringify(player.gameboard.board))
+	)
+
 	const attackResult = player.gameboard.receiveAttack(row, col)
+
+	console.log(
+		`Computer attacked (${row}, ${col}). Result: ${
+			attackResult ? 'Hit' : 'Miss'
+		}`
+	)
+	console.log(
+		'Player board after attack:',
+		JSON.parse(JSON.stringify(player.gameboard.board))
+	)
+
 	updateBoards()
 
 	if (checkGameOver()) return
@@ -113,6 +113,16 @@ function computerTurn() {
 	} else {
 		setTimeout(computerTurn, 1000)
 	}
+}
+
+function updateBoards() {
+	updateBoardDisplay(player.gameboard, document.getElementById('player-board'))
+	updateBoardDisplay(
+		computer.gameboard,
+		document.getElementById('computer-board'),
+		true
+	)
+	updateShipList(player.gameboard.ships, 'player-ships')
 }
 
 function checkGameOver() {
