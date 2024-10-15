@@ -74,10 +74,9 @@ function updateBoardDisplay(gameboard, boardElement, hideShips = false) {
 
 		const cellContent = gameboard.board[row][col]
 
-		cell.classList.remove('ship', 'hit', 'miss')
+		cell.classList.remove('ship', 'hit', 'miss', 'sunk')
 
 		if (cellContent === null) {
-			// Empty cell
 			if (
 				gameboard.missedShots.some(
 					(shot) => shot.row === row && shot.col === col
@@ -86,12 +85,31 @@ function updateBoardDisplay(gameboard, boardElement, hideShips = false) {
 				cell.classList.add('miss')
 			}
 		} else if (typeof cellContent === 'object') {
-			if (!hideShips) cell.classList.add('ship')
-			if (cellContent.isHit) cell.classList.add('hit')
+			const { ship, position } = cellContent
+			if (!hideShips && !ship.isHit(position)) {
+				cell.classList.add('ship')
+			}
+			if (ship.isHit(position)) {
+				cell.classList.add('hit')
+				if (ship.isSunk()) {
+					// Marcar todas las celdas del barco como hundidas
+					gameboard.board.forEach((row, rowIndex) => {
+						row.forEach((col, colIndex) => {
+							if (col && col.ship === ship) {
+								const shipCell = boardElement.querySelector(
+									`[data-row="${rowIndex}"][data-col="${colIndex}"]`
+								)
+								if (shipCell) {
+									shipCell.classList.add('sunk')
+								}
+							}
+						})
+					})
+				}
+			}
 		}
 	})
 }
-
 function playerAttack(row, col) {
 	if (currentPlayer !== player) return
 
@@ -103,17 +121,35 @@ function playerAttack(row, col) {
 	)
 
 	if (checkGameOver()) return
-	updateTurnIndicator()
-	computerTurn()
+
+	if (attackResult) {
+		// Si fue un hit, el jugador mantiene su turno
+		updateTurnIndicator()
+	} else {
+		// Si el ataque no fue exitoso (es decir, fue un miss o un hit repetido), cambia el turno
+		currentPlayer = computer
+		updateTurnIndicator()
+		setTimeout(computerTurn, 1000) // Retraso para que el jugador pueda ver su acción
+	}
 }
 
 function computerTurn() {
-	currentPlayer = computer
+	if (currentPlayer !== computer) return
+
 	const { row, col } = computer.randomAttack(player.gameboard)
+	const attackResult = player.gameboard.receiveAttack(row, col)
 	updateBoardDisplay(player.gameboard, document.querySelector('#boardRight'))
+
 	if (checkGameOver()) return
-	currentPlayer = player
-	updateTurnIndicator()
+
+	if (!attackResult) {
+		// Si el ataque no fue exitoso, cambia el turno
+		currentPlayer = player
+		updateTurnIndicator()
+	} else {
+		// Si fue un hit, el ordenador mantiene su turno
+		setTimeout(computerTurn, 1000) // El ordenador vuelve a atacar después de un breve retraso
+	}
 }
 
 function checkGameOver() {

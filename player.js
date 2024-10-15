@@ -12,7 +12,12 @@ function Player(isComputer = false) {
 		do {
 			row = Math.floor(Math.random() * 10)
 			col = Math.floor(Math.random() * 10)
-		} while (!enemyGameboard.receiveAttack(row, col))
+		} while (
+			enemyGameboard.board[row][col] === null &&
+			enemyGameboard.missedShots.some(
+				(shot) => shot.row === row && shot.col === col
+			)
+		)
 		return { row, col }
 	}
 

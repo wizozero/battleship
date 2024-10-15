@@ -25,6 +25,11 @@
 	background-color: #4ecdc4;
 }
 
+.sunk {
+	background-color: #ff6b6b;
+	border: 2px solid #ff0000;
+}
+
 #gameContainer {
 	display: flex;
 	justify-content: center;

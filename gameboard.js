@@ -29,7 +29,7 @@ function GameBoard() {
 		for (let i = 0; i < ship.length; i++) {
 			const currentRow = direction === 'horizontal' ? row : row + i
 			const currentCol = direction === 'horizontal' ? col + i : col
-			board[currentRow][currentCol] = ship
+			board[currentRow][currentCol] = { ship, position: i }
 		}
 	}
 
@@ -49,21 +49,52 @@ function GameBoard() {
 			if (!isValidCoordinate(row, col)) return false
 
 			if (this.board[row][col] === null) {
-				missedShots.push({ row, col })
-				return true
-			} else if (this.board[row][col].isHit) {
-				return false // Ya ha sido atacado
+				if (!missedShots.some((shot) => shot.row === row && shot.col === col)) {
+					missedShots.push({ row, col })
+				}
+				return false // Miss
 			} else {
-				this.board[row][col].hit()
-				return true
+				const { ship, position } = this.board[row][col]
+				if (ship.isHit(position)) {
+					return false // Ya ha sido atacado
+				} else {
+					ship.hit(position)
+					return true // Hit
+				}
 			}
+		},
+
+		getShipPosition(row, col) {
+			const ship = this.board[row][col]
+			if (!ship) return -1
+
+			// Buscar horizontalmente
+			for (let i = 0; i < ship.length; i++) {
+				if (col - i >= 0 && this.board[row][col - i] === ship) return i
+			}
+
+			// Buscar verticalmente
+			for (let i = 0; i < ship.length; i++) {
+				if (row - i >= 0 && this.board[row - i][col] === ship) return i
+			}
+
+			return 0
 		},
 
 		get missedShots() {
 			return [...missedShots]
 		},
 		isAllShipsSunk() {
-			return board.flat().every((cell) => cell === null || cell.isSunk())
+			const ships = new Set()
+			for (let row = 0; row < boardSize; row++) {
+				for (let col = 0; col < boardSize; col++) {
+					const cell = this.board[row][col]
+					if (cell && cell.ship) {
+						ships.add(cell.ship)
+					}
+				}
+			}
+			return Array.from(ships).every((ship) => ship.isSunk())
 		},
 	}
 }

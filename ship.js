@@ -1,23 +1,20 @@
 function Ship(length) {
-	let hitCount = 0
-	let isHit = false
+	const hits = new Array(length).fill(false)
 
 	return {
 		length,
-		hit() {
-			if (hitCount < length) {
-				hitCount++
-				isHit = true
+		hit(position) {
+			if (position >= 0 && position < length && !hits[position]) {
+				hits[position] = true
+				return true
 			}
+			return false
+		},
+		isHit(position) {
+			return hits[position]
 		},
 		isSunk() {
-			return hitCount === length
-		},
-		get hitCount() {
-			return hitCount
-		},
-		get isHit() {
-			return isHit
+			return hits.every((hit) => hit)
 		},
 	}
 }
